@@ -5,8 +5,6 @@ import pandas as pd
 import numpy as np
 from tqdm import tqdm
 from torch.utils.data import Dataset, DataLoader
-from sklearn.preprocessing import LabelEncoder, MinMaxScaler
-from sklearn.model_selection import train_test_split
 from adabelief_pytorch import AdaBelief
 import matplotlib.pyplot as plt
 
