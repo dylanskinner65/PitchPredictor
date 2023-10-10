@@ -55,7 +55,7 @@ def main():
 
     # Create the dataset and dataloader.
     train_data = PitchDatasetTrain()
-    test_data = PitchDatasetTrain()
+    test_data = PitchDatasetTest()
     batch_size, num_workers = 32, 2
     train_dataloader = DataLoader(dataset=train_data, batch_size=batch_size, shuffle=True, num_workers=num_workers, pin_memory=True)
     test_dataloader = DataLoader(dataset=test_data, batch_size=batch_size, shuffle=True, num_workers=num_workers, pin_memory=True)
