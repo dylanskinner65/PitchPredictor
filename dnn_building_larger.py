@@ -1,7 +1,7 @@
+import pandas as pd
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import pandas as pd
 import numpy as np
 from tqdm import tqdm
 from torch.utils.data import Dataset, DataLoader
@@ -17,17 +17,19 @@ def main():
     Once these are done, we will also create a two dataloaders that will be used to create our training
     and testing data. We will use the dataloaders to train our model.
     '''
+    # Check for GPU availability
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
     # Build dataset and dataloader.
     class PitchDatasetTrain(Dataset):
         def __init__(self):
             # Read in data
-            df = pd.read_parquet('training_data.parquet')
+            df = pd.read_parquet('~/PitchPredictor/training_data.parquet', engine='fastparquet')
 
             # Convert data to PyTorch tensors
             x_data = df.drop(columns=['pitch_type'])
             self.X = torch.tensor(x_data.to_numpy().astype(np.float32))
-            self.y = torch.tensor(df['pitch_type'].values, dtype=torch.long)
-            # self.y = self.y.reshape(-1, 1)
+            self.y = torch.tensor(df['pitch_type'].values, dtype=torch.int8)
             self.n_samples = df.shape[0]
         
         def __getitem__(self, index):
@@ -39,12 +41,12 @@ def main():
     class PitchDatasetTest(Dataset):
         def __init__(self):
             # Read in data
-            df = pd.read_parquet('test_data.parquet')
+            df = pd.read_parquet('~/PitchPredictor/testing_data.parquet', engine='fastparquet')
 
             # Convert data to PyTorch tensors
             x_data = df.drop(columns=['pitch_type'])
             self.X = torch.tensor(x_data.to_numpy().astype(np.float32))
-            self.y = torch.tensor(df['pitch_type'].values, dtype=torch.long)
+            self.y = torch.tensor(df['pitch_type'].values, dtype=torch.int8)
             self.n_samples = df.shape[0]
         
         def __getitem__(self, index):
@@ -52,11 +54,12 @@ def main():
         
         def __len__(self):
             return self.n_samples
+    
 
     # Create the dataset and dataloader.
     train_data = PitchDatasetTrain()
     test_data = PitchDatasetTest()
-    batch_size, num_workers = 32, 2
+    batch_size, num_workers = 8192, 1
     train_dataloader = DataLoader(dataset=train_data, batch_size=batch_size, shuffle=True, num_workers=num_workers, pin_memory=True)
     test_dataloader = DataLoader(dataset=test_data, batch_size=batch_size, shuffle=True, num_workers=num_workers, pin_memory=True)
 
@@ -71,9 +74,9 @@ def main():
         model.eval()  # Set the model to evaluation mode
         correct = 0
         total = 0
-
         with torch.no_grad():
             for inputs, labels in dataloader:
+                inputs, labels = inputs.to(device), labels.to(device)
                 outputs = model(inputs)
                 _, predicted = torch.max(outputs.data, 1)
                 total += labels.size(0)
@@ -89,7 +92,6 @@ def main():
         def forward(self, x):
             return torch.where(x > 0, torch.tanh(x), 0.25*torch.tanh(x))
 
-
     '''
     The Model
 
@@ -97,9 +99,6 @@ def main():
     optimizer and the <code>CrossEntropyLoss</code> loss function.
     '''
     # Build the DNN
-
-    # Check for GPU availability
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
     # First, define the hyperparameters
     input_size = 31  # Input size (e.g., number of features)
@@ -115,15 +114,11 @@ def main():
                                     PenalizedTanH(),
                                     nn.Linear(hidden_size, hidden_size*2),
                                     PenalizedTanH(),
-                                    nn.Linear(hidden_size*2, hidden_size*3),
-                                    PenalizedTanH(),
-                                    nn.Linear(hidden_size*3, hidden_size*4),
+                                    nn.Linear(hidden_size*2, hidden_size*4),
                                     PenalizedTanH(),
                                     nn.Linear(hidden_size*4, hidden_size*4),
                                     PenalizedTanH(),
-                                    nn.Linear(hidden_size*4, hidden_size*3),
-                                    PenalizedTanH(),
-                                    nn.Linear(hidden_size*3, hidden_size*2),
+                                    nn.Linear(hidden_size*4, hidden_size*2),
                                     PenalizedTanH(),
                                     nn.Linear(hidden_size*2, hidden_size),
                                     PenalizedTanH(),
@@ -163,21 +158,23 @@ def main():
         # Train the model.
         for i, (inputs, labels) in enumerate(tqdm_data_loader):
             optimizer.zero_grad()  # Clear gradients from previous iteration
+            labels = labels.type(torch.LongTensor)
             inputs, labels = inputs.to(device), labels.to(device)
             outputs = model(inputs)  # Forward pass
             loss = criterion(outputs, labels)  # Compute the loss
             loss.backward()  # Backpropagation
             optimizer.step()  # Update model parameters
-            loss_vals.append(loss.item())
             curr_loss.append(loss.item())
 
             # Update our tqdm loop so we can see what is happening.
             tqdm_data_loader.set_postfix(loss=np.mean(curr_loss), acc=acc_vals[-1])
         
+        # Append average of curr_loss to loss_vals
+        loss_vals.append(np.mean(curr_loss))
 
     # After training, you can save the model
     torch.save({'model': model.state_dict(),
-                'optim': optimizer.state_dict()}, 'pitch_dnn_L1.pth')
+                'optim': optimizer.state_dict()}, 'pitch_dnn_L4.pth')
 
     '''
     Plots
@@ -200,8 +197,7 @@ def main():
     ax[1].set_title('Accuracy of the Pitch DNN')
 
     plt.tight_layout()
-    plt.savefig('loss_and_acc.png')
-    plt.show()
+    plt.savefig('loss_and_acc4.png')
 
 if __name__ == '__main__':
     main()
