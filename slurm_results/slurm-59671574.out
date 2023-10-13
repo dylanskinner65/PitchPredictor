@@ -1,0 +1,53 @@
+[31mPlease check your arguments if you have upgraded adabelief-pytorch from version 0.0.5.
+[31mModifications to default arguments:
+[31m                           eps  weight_decouple    rectify
+-----------------------  -----  -----------------  ---------
+adabelief-pytorch=0.0.5  1e-08  False              False
+>=0.1.0 (Current 0.2.0)  1e-16  True               True
+[34mSGD better than Adam (e.g. CNN for Image Classification)    Adam better than SGD (e.g. Transformer, GAN)
+----------------------------------------------------------  ----------------------------------------------
+Recommended eps = 1e-8                                      Recommended eps = 1e-16
+[34mFor a complete table of recommended hyperparameters, see
+[34mhttps://github.com/juntang-zhuang/Adabelief-Optimizer
+[32mYou can disable the log message by setting "print_change_log = False", though it is recommended to keep as a reminder.
+[0m
+Weight decoupling enabled in AdaBelief
+Rectification enabled in AdaBelief
+Epoch [1/10]:   0%|          | 0/322.0 [00:00<?, ?it/s]Traceback (most recent call last):
+  File "/home/dskinne3/PitchPredictor/dnn_building_larger.py", line 201, in <module>
+    main()
+  File "/home/dskinne3/PitchPredictor/dnn_building_larger.py", line 151, in main
+    acc_vals.append(calculate_accuracy(model, test_dataloader))
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dskinne3/PitchPredictor/dnn_building_larger.py", line 80, in calculate_accuracy
+    outputs = model(inputs)
+              ^^^^^^^^^^^^^
+  File "/home/dskinne3/.conda/envs/pitchpredict/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1518, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dskinne3/.conda/envs/pitchpredict/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1527, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dskinne3/PitchPredictor/dnn_building_larger.py", line 126, in forward
+    return self.net(x)
+           ^^^^^^^^^^^
+  File "/home/dskinne3/.conda/envs/pitchpredict/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1518, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dskinne3/.conda/envs/pitchpredict/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1527, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dskinne3/.conda/envs/pitchpredict/lib/python3.11/site-packages/torch/nn/modules/container.py", line 215, in forward
+    input = module(input)
+            ^^^^^^^^^^^^^
+  File "/home/dskinne3/.conda/envs/pitchpredict/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1518, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dskinne3/.conda/envs/pitchpredict/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1527, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dskinne3/.conda/envs/pitchpredict/lib/python3.11/site-packages/torch/nn/modules/linear.py", line 114, in forward
+    return F.linear(input, self.weight, self.bias)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: mat1 and mat2 shapes cannot be multiplied (8192x31 and 64x128)
+Epoch [1/10]:   0%|          | 0/322.0 [00:02<?, ?it/s]
