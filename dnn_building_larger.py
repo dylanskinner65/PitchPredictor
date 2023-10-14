@@ -6,6 +6,7 @@ import numpy as np
 from tqdm import tqdm
 from torch.utils.data import Dataset, DataLoader
 from adabelief_pytorch import AdaBelief
+import torch.optim as optim
 import matplotlib.pyplot as plt
 
 
@@ -107,7 +108,7 @@ def main():
     input_size = 31  # Input size (e.g., number of features)
     hidden_size = 64  # Size of the hidden layer(s)
     output_size = 19  # Output size (e.g., number of classes)
-    learning_rate = 0.001
+    learning_rate = 0.0001
 
     # Define the neural network architecture
     class PitchDNN(nn.Module):
@@ -136,7 +137,9 @@ def main():
             self.transformer = nn.Transformer(
                 d_model=input_size, nhead=num_heads, num_encoder_layers=num_layers, num_decoder_layers=num_layers
             )
-            self.fc = nn.Linear(input_size, output_size)
+            self.linear = nn.Linear(input_size, hidden_size)
+            self.relu = nn.ReLU()
+            self.fc = nn.Lnear(hidden_size, output_size)
 
         def forward(self, x):
             x = x.float()
@@ -150,10 +153,10 @@ def main():
 
     # Define the loss function and optimizer
     criterion = nn.CrossEntropyLoss()
-    optimizer = AdaBelief(model.parameters(), lr=learning_rate)
+    optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 
     # Define variables for training loop.
-    num_epochs = 10
+    num_epochs = 12
     total_samples = len(train_data)
     n_iterations = np.ceil(total_samples/batch_size)
 
